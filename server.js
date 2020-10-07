@@ -6,10 +6,17 @@ const app = express();
 // connect to database
 connectDB();
 
-const PORT = process.env.PORT || 3000;
+// Init middleware
+app.use(express.json({ extended: false }));
 
-app.get("/", (req, res) => {
-  res.send("<h1>Hello World</h1>");
-});
+app.get("/", (req, res) => res.send("API running..."));
+
+// Define routes
+app.use("/api/users", require("./routes/api/users"));
+app.use("/api/profile", require("./routes/api/profile"));
+app.use("/api/auth", require("./routes/api/auth"));
+app.use("/api/posts", require("./routes/api/posts"));
+
+const PORT = process.env.PORT || 3000;
 
 app.listen(3000, () => console.log(`Server running on PORT: ${PORT}`));
