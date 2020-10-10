@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const config = require("config");
 const { check, validationResult } = require("express-validator");
 
-// @route   post api/users
+// @route   POST api/users
 // @desc    register user
 // @access  public
 
@@ -78,9 +78,9 @@ router.post(
 
 
     } catch (err) {
-      console.log(err.message);
-      res.status(500).send("Server Error");
-    }
+        console.log(err.message);
+        res.status(500).send("Server Error");
+      }
   }
 );
 
