@@ -1,25 +1,23 @@
 const express = require('express');
-const router = express.Router();
-const auth = require('../../middleware/auth');
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
+const router = express.Router();
+const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator');
 
 // @route   GET api/profile/me
 // @desc    Get curent users profile
 // @access  private
-
 router.get('/me', auth, async (req, res) => {
   try {
-    const profile = await Profile.findOne({
+    const myProfile = await Profile.findOne({
       user: req.user.id,
     }).populate('user', ['name', 'avatar']);
     // check if profile exist
-    if (!profile) {
+    if (!myProfile) {
       return res.status(400).json({ msg: 'No profile for this user' });
     }
-
-    res.json(profile);
+    res.json(myProfile);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -29,7 +27,6 @@ router.get('/me', auth, async (req, res) => {
 // POST api/profile
 // @desc create/update user
 // @access private
-
 router.post(
   '/',
   [
@@ -94,8 +91,10 @@ router.post(
         return res.json(profile);
       }
       // else create Profile
+      profile = new Profile(profileFields);
+      await profile.save();
 
-      return res.status(200).send('Afferin lan');
+      return res.status(200).json(profile);
     } catch (err) {
       console.log(err.message);
       res.status(500).send('Server Error');
@@ -103,4 +102,41 @@ router.post(
   }
 );
 
+// @route   GET api/profile
+// @desc    get all profiles
+// @access  public
+router.get('/', async (req, res) => {
+  try {
+    const profiles = await Profile.find().populate('user', ['name', 'avatar']);
+    res.json(profiles);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   GET api/profile/user/:user_id
+// @desc    get user by user_id
+// @access  public
+router.get('/user/:user_id', async (req, res) => {
+  try {
+    const profile = await Profile.findOne({
+      user: req.params.user_id,
+    }).populate('user', ['name', 'avatar']);
+
+    if (!profile) {
+      return res.status(400).json({ msg: 'Profile can not found' });
+    }
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    // kind: 'ObjectId',
+    if (err.kind === 'ObjectId') {
+      return res.status(400).json({ msg: 'Profile can not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+//
 module.exports = router;
