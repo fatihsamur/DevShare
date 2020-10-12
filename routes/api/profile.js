@@ -10,20 +10,19 @@ const { check, validationResult } = require('express-validator');
 // @access  private
 router.get('/me', auth, async (req, res) => {
   try {
-    const myProfile = await Profile.findOne({
+    const profile = await Profile.findOne({
       user: req.user.id,
     }).populate('user', ['name', 'avatar']);
     // check if profile exist
-    if (!myProfile) {
+    if (!profile) {
       return res.status(400).json({ msg: 'No profile for this user' });
     }
-    res.json(myProfile);
+    res.json(profile);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
 });
-
 // POST api/profile
 // @desc create/update user
 // @access private
@@ -123,17 +122,101 @@ router.get('/user/:user_id', async (req, res) => {
     const profile = await Profile.findOne({
       user: req.params.user_id,
     }).populate('user', ['name', 'avatar']);
-
     if (!profile) {
       return res.status(400).json({ msg: 'Profile can not found' });
     }
     res.json(profile);
   } catch (err) {
     console.error(err.message);
-    // kind: 'ObjectId',
     if (err.kind === 'ObjectId') {
       return res.status(400).json({ msg: 'Profile can not found' });
     }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   GET api/profile/me
+// @desc    DELETE personal profile
+// @access  private
+router.delete('/', auth, async (req, res) => {
+  try {
+    // // // delete posts // // // //
+    // delete profile
+    await Profile.findOneAndDelete({ user: req.user.id });
+    // delete user
+    await User.findOneAndDelete({ _id: req.user.id });
+    res.json({ msg: 'user deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// PUT api/profile/experience
+// @desc add profile experience
+// @access private
+router.put(
+  '/experience',
+  [
+    auth,
+    [check('title', 'Title is required').not().isEmpty()],
+    [check('company', 'Company is required').not().isEmpty()],
+    [check('from', 'Beginning date is required').not().isEmpty()],
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    //
+    const {
+      title,
+      company,
+      location,
+      from,
+      to,
+      current,
+      description,
+    } = req.body;
+    //
+    const newExperience = {
+      title,
+      company,
+      location,
+      from,
+      to,
+      current,
+      description,
+    };
+    //
+    try {
+      let profile = await Profile.findOne({ user: req.user.id });
+      profile.experience.push(newExperience);
+      await profile.save();
+      res.json(profile);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).json({ msg: 'Server Error' });
+    }
+
+    //
+  }
+);
+
+// DELETE api/profile/experience/:experience_id
+// @desc add profile experience
+// @access private
+router.delete('/experience/:experience_id', auth, async (req, res) => {
+  try {
+    let profile = await Profile.findOne({ user: req.user.id });
+    const newExp = profile.experience.filter((exp) => {
+      return exp._id.toString() !== req.params.experience_id;
+    });
+    profile.experience = newExp;
+    await profile.save();
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send('Server Error');
   }
 });
