@@ -96,32 +96,34 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
+/* Change the for loop with proper Array methods */
+/* Add an extra error option for post not exist situation */
 // @route   PUT api/posts/like/:id
 // @desc    like a post
 // @access  private
 router.put('/like/:id', auth, async (req, res) => {
-  const post = await Post.findById(req.params.id);
-  let indexOfLike = -1;
-  let isLiked = false;
-  for (let i = 0; i < post.likes.length; i++) {
-    if (req.user.id === post.likes[i].id) {
-      indexOfLike = i;
-      break;
-    }
-  }
-  if (indexOfLike !== -1) {
-    isLiked = true;
-  }
-
   try {
+    const post = await Post.findById(req.params.id);
+    let indexOfLike = -1;
+    let isLiked = false;
+    for (let i = 0; i < post.likes.length; i++) {
+      if (req.user.id === post.likes[i].user.toString()) {
+        indexOfLike = i;
+        break;
+      }
+    }
+    if (indexOfLike !== -1) {
+      isLiked = true;
+    }
     if (!isLiked) {
-      post.likes.unshift(req.user.id);
+      post.likes.unshift({ user: req.user.id });
       await post.save();
     } else {
-      return res.status(404).json({ msg: 'You liked before' });
+      return res.status(400).json({ msg: 'You liked before' });
     }
     res.json(post.likes);
   } catch (err) {
+    /* add an extra error for the situation that there is no post exist */
     console.error(err.message);
     res.status(500).json({ msg: 'Server Error' });
   }
@@ -131,14 +133,99 @@ router.put('/like/:id', auth, async (req, res) => {
 // @desc    unlike a post
 // @access  private
 router.put('/unlike/:id', auth, async (req, res) => {
-  const unlike = req.user.id;
-  console.log(`unlike from ${req.user.id}`);
-
-  const post = await Post.findById(req.params.id);
-  console.log(post.likes);
-
-  res.json(post);
   try {
+    const post = await Post.findById(req.params.id);
+    // check if user liked the post
+    let indexOfLike = -1;
+    let isLiked = false;
+    for (let i = 0; i < post.likes.length; i++) {
+      if (req.user.id === post.likes[i].user.toString()) {
+        indexOfLike = i;
+        break;
+      }
+    }
+    if (indexOfLike !== -1) {
+      isLiked = true;
+    }
+    if (isLiked) {
+      post.likes.splice(indexOfLike, 1);
+      await post.save();
+    } else {
+      return res.status(404).json({ msg: 'Did not liked before' });
+    }
+    res.json(post.likes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
+// @route   PUT api/posts/comment/:id
+// @desc    comment on a post
+// @access  private
+router.put(
+  '/comment/:id',
+  [auth, check('text', 'Text is required').not().isEmpty()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const post = await Post.findById(req.params.id);
+      const user = await User.findById(req.user.id);
+
+      const comment = {
+        user: user.id,
+        text: req.body.text,
+        name: user.name,
+        avatar: user.avatar,
+      };
+      post.comments.unshift(comment);
+      await post.save();
+      res.json(post.comments);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).json({ msg: 'Server Error' });
+    }
+  }
+);
+
+// @route   PUT api/posts/uncomment/:id
+// @desc    delete a comment from post
+// @access  private
+router.put('/uncomment/:post_id/:com_id', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.post_id);
+    const comment = req.params.com_id;
+    let indexOfCom = -1;
+    let fromComArr = null;
+    // find the matching comment from comment list
+    for (let i = 0; i < post.comments.length; i++) {
+      if (post.comments[i].id.toString() === comment) {
+        indexOfCom = i;
+        fromComArr = post.comments[i];
+        break;
+      }
+    }
+
+    // check if comment not exist
+    if (indexOfCom === -1) {
+      return res.status(404).json({ msg: 'Comment not found' });
+    }
+
+    const postOwner = post.user.toString();
+    const commentOwner = fromComArr.user.toString();
+
+    // post owner and comment owner can delete post
+    if (req.user.id === postOwner || req.user.id === commentOwner) {
+      post.comments.splice(indexOfCom, 1);
+    } else {
+      return res.status(401).json({ msh: 'Unauthorized action' });
+    }
+    await post.save();
+    res.json(post.comments);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ msg: 'Server Error' });
