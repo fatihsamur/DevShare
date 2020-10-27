@@ -1,6 +1,7 @@
 const express = require('express');
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
+const Post = require('../../models/Post');
 const router = express.Router();
 const got = require('got');
 const config = require('config');
@@ -138,12 +139,13 @@ router.get('/user/:user_id', async (req, res) => {
   }
 });
 
-// @route   GET api/profile/me
-// @desc    DELETE personal profile
+// @route   GET api/profile
+// @desc    DELETE user
 // @access  private
 router.delete('/', auth, async (req, res) => {
   try {
-    // // // delete posts // // // //
+    // delete posts //
+    await Post.deleteMany({ user: req.user.id });
     // delete profile
     await Profile.findOneAndDelete({ user: req.user.id });
     // delete user
