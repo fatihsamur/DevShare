@@ -119,7 +119,7 @@ router.get('/', async (req, res) => {
 });
 
 // @route   GET api/profile/user/:user_id
-// @desc    get user by user_id
+// @desc    get profile by user_id
 // @access  public
 router.get('/user/:user_id', async (req, res) => {
   try {

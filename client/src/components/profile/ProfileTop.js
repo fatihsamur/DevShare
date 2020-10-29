@@ -2,8 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 const ProfileTop = ({
-  profile: { status, company, location, website, social },
-  user: { name, avatar },
+  profile: {
+    status,
+    company,
+    location,
+    website,
+    social,
+    user: { name, avatar },
+  },
 }) => {
   return (
     <div className="profile-top bg-primary p-2">

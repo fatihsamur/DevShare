@@ -7,10 +7,15 @@ const initialState = {};
 
 const middleware = [thunk];
 
+const composeEnhancers = composeWithDevTools({
+  trace: true,
+  traceLimit: 50,
+});
+
 const store = createStore(
   rootReducer,
   initialState,
-  composeWithDevTools(applyMiddleware(...middleware))
+  composeEnhancers(applyMiddleware(...middleware))
 );
 
 export default store;

@@ -13,12 +13,13 @@ import { getProfileById } from '../../actions/profile';
 const Profile = ({
   getProfileById,
   match,
+  auth: { user },
   profile: { profile, loading },
   auth,
 }) => {
   useEffect(() => {
     getProfileById(match.params.id);
-  }, [getProfileById, match.params.id]);
+  }, [user]);
   return (
     <Fragment>
       {profile === null || loading ? (
@@ -35,7 +36,7 @@ const Profile = ({
                 Edit Profile
               </Link>
             )}
-          <div class="profile-grid my-1">
+          <div className="profile-grid my-1">
             <ProfileTop profile={profile} />
             <ProfileAbout profile={profile} />
             <div className="profile-exp bg-white p-2">
@@ -44,8 +45,8 @@ const Profile = ({
                 <Fragment>
                   {profile.experience.map((experience) => (
                     <ProfileExperience
+                      experience={experience}
                       key={experience._id}
-                      experince={experience}
                     />
                   ))}
                 </Fragment>
@@ -58,7 +59,7 @@ const Profile = ({
               <h2 className="text-primary">Education</h2>
               {profile.education.length > 0 ? (
                 <Fragment>
-                  {profile.experience.map((education) => (
+                  {profile.education.map((education) => (
                     <ProfileEducation
                       key={education._id}
                       education={education}
@@ -70,8 +71,8 @@ const Profile = ({
               )}
             </div>
 
-            {profile.githubUserName && (
-              <ProfileGithub username={profile.githubUserName} />
+            {profile.githubUsername && (
+              <ProfileGithub username={profile.githubUsername} />
             )}
           </div>
         </Fragment>
