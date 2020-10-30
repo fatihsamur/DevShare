@@ -1,6 +1,0 @@
-{
-  "mongoURI": "mongodb+srv://fatih2406:Fi112358..@devnetwork.wvara.mongodb.net/<dbname>?retryWrites=true&w=majority",
-  "jwtSecretKey": "maHxgWoewe8ItQqj6bUowIDEf0Msm5Pu1PYdWGyMtOWB9D5WSHCMaWcZ6rOR8",
-  "githubClientID": "51238e5ba5b561a9da81",
-  "githubClientSecret": "42b3136b590d19185c2ef0149b5ae4506a6ba1d5"
-}
