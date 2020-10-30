@@ -81,7 +81,6 @@ router.delete('/:id', auth, async (req, res) => {
     }
     // check if delete req is from post owner
     if (post.user.toString() === req.user.id) {
-      console.log('sildim');
       await Post.findByIdAndDelete(req.params.id);
     } else {
       return res.status(401).json({ msg: 'Unauthorized action' });
@@ -192,7 +191,7 @@ router.put(
   }
 );
 
-// @route   PUT api/posts/uncomment/:id
+// @route   PUT api/posts/uncomment/:post_id/:comment_id
 // @desc    delete a comment from post
 // @access  private
 router.put('/uncomment/:post_id/:com_id', auth, async (req, res) => {
